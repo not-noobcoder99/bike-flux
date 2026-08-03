@@ -22,7 +22,11 @@ async function register(req, res, next) {
       provider_ref: null,
     });
 
-    res.status(201).json({ message: 'Registered successfully', user_id });
+    // Accounts start as 'pending' (see schema) until an admin approves them.
+    res.status(201).json({
+      message: 'Registered successfully. Your account is pending admin approval before you can log in.',
+      user_id,
+    });
   } catch (err) {
     next(err);
   }
@@ -36,6 +40,13 @@ async function login(req, res, next) {
 
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ error: 'Invalid credentials' });
+
+    if (user.status === 'pending') {
+      return res.status(403).json({ error: 'Your account is awaiting admin approval' });
+    }
+    if (user.status === 'suspended') {
+      return res.status(403).json({ error: 'Your account has been suspended' });
+    }
 
     const token = jwt.sign(
       { user_id: user.user_id, role: user.role },

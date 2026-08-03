@@ -1,6 +1,16 @@
 const db = require('../config/db');
 
 const Scooty = {
+  async findAll() {
+    const [rows] = await db.query(
+      `SELECT s.*, pz.name AS zone_name
+       FROM scooties s
+       LEFT JOIN parking_zones pz ON s.current_zone_id = pz.zone_id
+       ORDER BY s.scooty_id`
+    );
+    return rows;
+  },
+
   async findAvailable() {
     const [rows] = await db.query(
       `SELECT * FROM scooties WHERE status = 'available'`

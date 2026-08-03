@@ -22,6 +22,18 @@ const User = {
     );
     return rows[0];
   },
+
+  async findByStatus(status) {
+    const [rows] = await db.query(
+      'SELECT user_id, full_name, email, phone, student_id, role, status, created_at FROM users WHERE status = ? ORDER BY created_at DESC',
+      [status]
+    );
+    return rows;
+  },
+
+  async updateStatus(user_id, status) {
+    await db.query('UPDATE users SET status = ? WHERE user_id = ?', [status, user_id]);
+  },
 };
 
 module.exports = User;

@@ -4,6 +4,7 @@ const ConditionPhoto = require('../models/ConditionPhoto');
 const PricingPlan = require('../models/PricingPlan');
 const iotService = require('../services/iotService');
 const billingService = require('../services/billingService');
+const zoneService = require('../services/zoneService');
 const { distanceKm } = require('../utils/geofence');
 
 // Step 1: user scans QR -> validate scooty + account, unlock relay, create ride row
@@ -20,9 +21,13 @@ async function unlockScooty(req, res, next) {
       return res.status(400).json({ error: 'Scooty is not available' });
     }
 
+    const resolved_zone_id = zone_id ?? (lat != null && lng != null
+      ? await zoneService.resolveZoneForPoint(lat, lng)
+      : null);
+
     const plan = await PricingPlan.findDefault();
     const ride_id = await Ride.create({
-      user_id, scooty_id, plan_id: plan.plan_id, start_zone_id: zone_id, start_lat: lat, start_lng: lng,
+      user_id, scooty_id, plan_id: plan.plan_id, start_zone_id: resolved_zone_id, start_lat: lat, start_lng: lng,
     });
 
     await iotService.unlockScooty(scooty_id);
@@ -34,10 +39,28 @@ async function unlockScooty(req, res, next) {
   }
 }
 
+// Handles the actual multipart image upload (via multer) for a condition photo.
+// Frontend uploads the file here first, then calls /condition-photo with the returned URL.
+async function uploadPhoto(req, res, next) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No photo file uploaded' });
+    const photo_url = `/uploads/${req.file.filename}`;
+    res.status(201).json({ photo_url });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // Step 2: rider uploads condition photo before riding off
 async function uploadConditionPhoto(req, res, next) {
   try {
-    const { ride_id, photo_url, photo_type } = req.body; // photo_url from upload/storage step
+    const { ride_id, photo_url, photo_type } = req.body;
+    if (!ride_id || !photo_url) {
+      return res.status(400).json({ error: 'ride_id and photo_url are required' });
+    }
+    const ride = await Ride.findById(ride_id);
+    if (!ride) return res.status(404).json({ error: 'Ride not found' });
+
     await ConditionPhoto.create({ ride_id, photo_url, photo_type: photo_type || 'start' });
 
     if (photo_type === 'start' || !photo_type) {
@@ -61,10 +84,16 @@ async function endRide(req, res, next) {
     const distance_km = distanceKm(ride.start_lat, ride.start_lng, end_lat, end_lng);
     const duration_minutes = Math.max(1, Math.round((Date.now() - new Date(ride.start_time)) / 60000));
 
+    const resolved_end_zone_id = end_zone_id ?? (end_lat != null && end_lng != null
+      ? await zoneService.resolveZoneForPoint(end_lat, end_lng)
+      : null);
+
     const plan = await require('../models/PricingPlan').findById(ride.plan_id);
     const fare_amount = await billingService.calculateFare({ distance_km, duration_minutes, plan });
 
-    await Ride.complete(ride_id, { end_zone_id, end_lat, end_lng, distance_km, duration_minutes, fare_amount });
+    await Ride.complete(ride_id, {
+      end_zone_id: resolved_end_zone_id, end_lat, end_lng, distance_km, duration_minutes, fare_amount,
+    });
     await billingService.chargeRide({ user_id: ride.user_id, ride_id, amount: fare_amount });
 
     await require('../services/iotService').lockScooty(ride.scooty_id);
@@ -95,4 +124,4 @@ async function history(req, res, next) {
   }
 }
 
-module.exports = { unlockScooty, uploadConditionPhoto, endRide, activeRide, history };
+module.exports = { unlockScooty, uploadPhoto, uploadConditionPhoto, endRide, activeRide, history };

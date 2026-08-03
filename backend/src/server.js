@@ -1,3 +1,4 @@
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -8,6 +9,10 @@ const scootyRoutes = require('./routes/scootyRoutes');
 const rideRoutes = require('./routes/rideRoutes');
 const zoneRoutes = require('./routes/zoneRoutes');
 const walletRoutes = require('./routes/walletRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const maintenanceRoutes = require('./routes/maintenanceRoutes');
+
+fs.mkdirSync('uploads', { recursive: true }); // condition photos live here
 
 const app = express();
 
@@ -22,6 +27,8 @@ app.use('/api/scooties', scootyRoutes);
 app.use('/api/rides', rideRoutes);
 app.use('/api/zones', zoneRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 app.use(errorHandler);
 

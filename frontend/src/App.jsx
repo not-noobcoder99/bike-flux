@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import RoleProtectedRoute from './components/RoleProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import MapHome from './pages/MapHome.jsx';
@@ -8,6 +9,8 @@ import ScanUnlock from './pages/ScanUnlock.jsx';
 import ActiveRide from './pages/ActiveRide.jsx';
 import RideHistory from './pages/RideHistory.jsx';
 import Wallet from './pages/Wallet.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import MaintenanceDashboard from './pages/MaintenanceDashboard.jsx';
 
 export default function App() {
   return (
@@ -22,6 +25,8 @@ export default function App() {
         <Route path="/ride" element={<ProtectedRoute><ActiveRide /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><RideHistory /></ProtectedRoute>} />
         <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/admin" element={<RoleProtectedRoute roles={['admin']}><AdminDashboard /></RoleProtectedRoute>} />
+        <Route path="/maintenance" element={<RoleProtectedRoute roles={['maintenance']}><MaintenanceDashboard /></RoleProtectedRoute>} />
       </Routes>
     </div>
   );

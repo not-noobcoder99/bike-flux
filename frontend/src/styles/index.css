@@ -10,11 +10,11 @@ body { margin: 0; font-family: -apple-system, Segoe UI, Roboto, sans-serif; back
 .nav-links a { color: white; text-decoration: none; }
 .nav-links button { background: white; color: #16a34a; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; }
 
-.auth-page, .scan-page, .ride-page, .ride-summary, .history-page, .wallet-page, .map-page {
+.auth-page, .scan-page, .ride-page, .ride-summary, .history-page, .wallet-page, .map-page, .dashboard-page {
   max-width: 480px; margin: 2rem auto; padding: 1.5rem; background: white; border-radius: 10px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
-.map-page { max-width: 900px; }
+.map-page, .dashboard-page { max-width: 900px; }
 
 form { display: flex; flex-direction: column; gap: 0.75rem; }
 input { padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; }
@@ -26,3 +26,28 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #eee; }
+
+.dashboard-page section { margin-top: 1.5rem; }
+.stats-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+.stat-card { flex: 1; min-width: 100px; background: #f0fdf4; border-radius: 8px; padding: 1rem; text-align: center; }
+.stat-value { display: block; font-size: 1.5rem; font-weight: 700; color: #16a34a; }
+.stat-label { font-size: 0.85rem; color: #666; }
+
+.tab-bar { display: flex; gap: 0.5rem; margin: 1rem 0; }
+.tab-bar button { background: #e5e7eb; color: #374151; }
+.tab-bar button.active { background: #16a34a; color: white; }
+
+.badge { padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8rem; text-transform: capitalize; }
+.badge-available { background: #dcfce7; color: #166534; }
+.badge-in_use { background: #dbeafe; color: #1e40af; }
+.badge-maintenance { background: #fef3c7; color: #92400e; }
+.badge-offline { background: #f3f4f6; color: #6b7280; }
+.badge-open { background: #fee2e2; color: #991b1b; }
+.badge-in_progress { background: #fef3c7; color: #92400e; }
+.badge-resolved { background: #dcfce7; color: #166534; }
+
+select, textarea { padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; font-family: inherit; }
+.btn-secondary { background: #6b7280; }
+.btn-danger { background: #dc2626; }
+.form-actions { display: flex; gap: 0.5rem; }
+.zone-form { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; }

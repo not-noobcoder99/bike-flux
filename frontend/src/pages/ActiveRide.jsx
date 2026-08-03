@@ -6,16 +6,34 @@ export default function ActiveRide() {
   const { state } = useLocation();
   const ride_id = state?.ride_id;
   const [photoConfirmed, setPhotoConfirmed] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [ending, setEnding] = useState(false);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Placeholder: real implementation uploads the captured photo to storage
-  // (e.g. S3) first, then sends the resulting URL here.
-  async function confirmConditionPhoto() {
-    const fakePhotoUrl = `https://storage.example.com/condition/${ride_id}-start.jpg`;
-    await client.post('/rides/condition-photo', { ride_id, photo_url: fakePhotoUrl, photo_type: 'start' });
-    setPhotoConfirmed(true);
+  async function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    setError('');
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      // Don't set Content-Type manually — axios must generate it itself
+      // so it includes the multipart boundary, or the backend can't parse the file.
+      const uploadRes = await client.post('/rides/upload-photo', formData);
+      await client.post('/rides/condition-photo', {
+        ride_id,
+        photo_url: uploadRes.data.photo_url,
+        photo_type: 'start',
+      });
+      setPhotoConfirmed(true);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Photo upload failed');
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleEndRide() {
@@ -48,10 +66,18 @@ export default function ActiveRide() {
   return (
     <div className="ride-page">
       <h2>Ride #{ride_id}</h2>
+      {error && <p className="error">{error}</p>}
       {!photoConfirmed ? (
         <>
           <p>Take a photo confirming the scooty's condition before riding off.</p>
-          <button onClick={confirmConditionPhoto}>Confirm Condition Photo</button>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handlePhotoUpload}
+            disabled={uploading}
+          />
+          {uploading && <p>Uploading...</p>}
         </>
       ) : (
         <>
