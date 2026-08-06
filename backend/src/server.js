@@ -12,13 +12,13 @@ const walletRoutes = require('./routes/walletRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 
-fs.mkdirSync('uploads', { recursive: true }); // condition photos live here
+fs.mkdirSync('uploads', { recursive: true });
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads')); // condition photos
+app.use('/uploads', express.static('uploads'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'bike-flux-backend' }));
 

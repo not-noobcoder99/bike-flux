@@ -14,3 +14,4 @@ router.get('/active', requireAuth, activeRide);
 router.get('/history', requireAuth, history);
 
 module.exports = router;
+

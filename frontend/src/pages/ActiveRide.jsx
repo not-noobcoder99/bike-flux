@@ -20,8 +20,7 @@ export default function ActiveRide() {
     try {
       const formData = new FormData();
       formData.append('photo', file);
-      // Don't set Content-Type manually — axios must generate it itself
-      // so it includes the multipart boundary, or the backend can't parse the file.
+      // Don't set Content-Type manually -- axios needs to add the multipart boundary itself.
       const uploadRes = await client.post('/rides/upload-photo', formData);
       await client.post('/rides/condition-photo', {
         ride_id,
@@ -70,21 +69,13 @@ export default function ActiveRide() {
       {!photoConfirmed ? (
         <>
           <p>Take a photo confirming the scooty's condition before riding off.</p>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handlePhotoUpload}
-            disabled={uploading}
-          />
+          <input type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} disabled={uploading} />
           {uploading && <p>Uploading...</p>}
         </>
       ) : (
         <>
           <p>Ride in progress. GPS is tracking your trip.</p>
-          <button disabled={ending} onClick={handleEndRide}>
-            {ending ? 'Ending ride...' : 'End Ride'}
-          </button>
+          <button disabled={ending} onClick={handleEndRide}>{ending ? 'Ending ride...' : 'End Ride'}</button>
         </>
       )}
     </div>

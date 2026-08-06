@@ -7,7 +7,6 @@ const billingService = require('../services/billingService');
 const zoneService = require('../services/zoneService');
 const { distanceKm } = require('../utils/geofence');
 
-// Step 1: user scans QR -> validate scooty + account, unlock relay, create ride row
 async function unlockScooty(req, res, next) {
   try {
     const { scooty_id, lat, lng, zone_id } = req.body;
@@ -39,8 +38,6 @@ async function unlockScooty(req, res, next) {
   }
 }
 
-// Handles the actual multipart image upload (via multer) for a condition photo.
-// Frontend uploads the file here first, then calls /condition-photo with the returned URL.
 async function uploadPhoto(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ error: 'No photo file uploaded' });
@@ -51,7 +48,6 @@ async function uploadPhoto(req, res, next) {
   }
 }
 
-// Step 2: rider uploads condition photo before riding off
 async function uploadConditionPhoto(req, res, next) {
   try {
     const { ride_id, photo_url, photo_type } = req.body;
@@ -73,7 +69,6 @@ async function uploadConditionPhoto(req, res, next) {
   }
 }
 
-// Step 3: end ride -> compute fare, charge virtual card, free up scooty
 async function endRide(req, res, next) {
   try {
     const { ride_id, end_lat, end_lng, end_zone_id } = req.body;
@@ -88,7 +83,7 @@ async function endRide(req, res, next) {
       ? await zoneService.resolveZoneForPoint(end_lat, end_lng)
       : null);
 
-    const plan = await require('../models/PricingPlan').findById(ride.plan_id);
+    const plan = await PricingPlan.findById(ride.plan_id);
     const fare_amount = await billingService.calculateFare({ distance_km, duration_minutes, plan });
 
     await Ride.complete(ride_id, {
@@ -96,7 +91,7 @@ async function endRide(req, res, next) {
     });
     await billingService.chargeRide({ user_id: ride.user_id, ride_id, amount: fare_amount });
 
-    await require('../services/iotService').lockScooty(ride.scooty_id);
+    await iotService.lockScooty(ride.scooty_id);
     await Scooty.updateStatus(ride.scooty_id, 'available');
     await Scooty.updateLocation(ride.scooty_id, end_lat, end_lng);
 

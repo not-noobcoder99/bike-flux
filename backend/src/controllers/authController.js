@@ -15,14 +15,12 @@ async function register(req, res, next) {
     const password_hash = await bcrypt.hash(password, 10);
     const user_id = await User.create({ full_name, email, password_hash, phone, student_id });
 
-    // Auto-provision a virtual card placeholder (real issuance happens via payment provider)
     await VirtualCard.create({
       user_id,
       card_number: `VC-${user_id}-${Date.now()}`,
       provider_ref: null,
     });
 
-    // Accounts start as 'pending' (see schema) until an admin approves them.
     res.status(201).json({
       message: 'Registered successfully. Your account is pending admin approval before you can log in.',
       user_id,

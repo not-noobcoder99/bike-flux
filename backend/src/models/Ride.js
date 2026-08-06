@@ -43,6 +43,21 @@ const Ride = {
     );
     return rows;
   },
+
+  async findAll() {
+    const [rows] = await db.query(
+      `SELECT r.*, u.full_name, u.email, s.plate_number
+       FROM rides r
+       JOIN users u ON r.user_id = u.user_id
+       JOIN scooties s ON r.scooty_id = s.scooty_id
+       ORDER BY r.created_at DESC`
+    );
+    return rows;
+  },
+
+  async delete(ride_id) {
+    await db.query('DELETE FROM rides WHERE ride_id = ?', [ride_id]);
+  },
 };
 
 module.exports = Ride;

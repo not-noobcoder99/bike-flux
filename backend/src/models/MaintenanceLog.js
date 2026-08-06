@@ -51,6 +51,11 @@ const MaintenanceLog = {
       [status, resolved_at, log_id]
     );
   },
+
+  async delete(log_id) {
+    await db.query('DELETE FROM maintenance_logs WHERE log_id = ?', [log_id]);
+  },
 };
 
 module.exports = MaintenanceLog;
+
