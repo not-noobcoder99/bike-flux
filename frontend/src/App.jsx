@@ -9,6 +9,8 @@ import ScanUnlock from './pages/ScanUnlock.jsx';
 import ActiveRide from './pages/ActiveRide.jsx';
 import RideHistory from './pages/RideHistory.jsx';
 import Wallet from './pages/Wallet.jsx';
+import Profile from './pages/Profile.jsx';
+import SimulateRide from './pages/SimulateRide.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import MaintenanceDashboard from './pages/MaintenanceDashboard.jsx';
 
@@ -25,6 +27,8 @@ export default function App() {
         <Route path="/ride" element={<ProtectedRoute><ActiveRide /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><RideHistory /></ProtectedRoute>} />
         <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/simulate" element={<ProtectedRoute><SimulateRide /></ProtectedRoute>} />
         <Route path="/admin" element={<RoleProtectedRoute roles={['admin']}><AdminDashboard /></RoleProtectedRoute>} />
         <Route path="/maintenance" element={<RoleProtectedRoute roles={['maintenance']}><MaintenanceDashboard /></RoleProtectedRoute>} />
       </Routes>

@@ -70,4 +70,21 @@ async function me(req, res, next) {
   }
 }
 
-module.exports = { register, login, me };
+async function updateProfile(req, res, next) {
+  try {
+    const { full_name, phone, student_id } = req.body;
+    if (!full_name) return res.status(400).json({ error: 'full_name is required' });
+    const user = await User.findById(req.user.user_id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    await User.update(req.user.user_id, {
+      full_name,
+      phone: phone || user.phone,
+      student_id: student_id || user.student_id,
+    });
+    res.json(await User.findById(req.user.user_id));
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, me, updateProfile };

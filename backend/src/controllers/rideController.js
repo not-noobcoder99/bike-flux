@@ -119,4 +119,65 @@ async function history(req, res, next) {
   }
 }
 
-module.exports = { unlockScooty, uploadPhoto, uploadConditionPhoto, endRide, activeRide, history };
+// Fare preview: returns estimated fare for given distance + duration
+async function calculateFare(req, res, next) {
+  try {
+    const { distance_km, duration_minutes } = req.body;
+    if (!distance_km || !duration_minutes) {
+      return res.status(400).json({ error: 'distance_km and duration_minutes are required' });
+    }
+    const plan = await PricingPlan.findDefault();
+    if (!plan) return res.status(400).json({ error: 'No pricing plan configured' });
+
+    const fare_amount = await billingService.calculateFare({
+      distance_km: Number(distance_km),
+      duration_minutes: Number(duration_minutes),
+      plan,
+    });
+    res.json({ fare_amount });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// User-facing ride simulator
+async function simulateRide(req, res, next) {
+  try {
+    const user_id = req.user.user_id;
+    const { scooty_id, distance_km, duration_minutes } = req.body;
+    if (!scooty_id) return res.status(400).json({ error: 'scooty_id is required' });
+
+    const scooty = await Scooty.findById(scooty_id);
+    if (!scooty) return res.status(404).json({ error: 'Scooty not found' });
+
+    const plan = await PricingPlan.findDefault();
+    if (!plan) return res.status(400).json({ error: 'No pricing plan configured' });
+
+    const simDistance = distance_km ? Number(distance_km) : Math.round((Math.random() * 3 + 0.5) * 100) / 100;
+    const simDuration = duration_minutes ? Number(duration_minutes) : Math.round(Math.random() * 20 + 5);
+
+    const ride_id = await Ride.create({
+      user_id, scooty_id, plan_id: plan.plan_id,
+      start_zone_id: scooty.current_zone_id,
+      start_lat: scooty.current_lat, start_lng: scooty.current_lng,
+    });
+    await Ride.activate(ride_id);
+
+    const fare_amount = await billingService.calculateFare({ distance_km: simDistance, duration_minutes: simDuration, plan });
+    await Ride.complete(ride_id, {
+      end_zone_id: scooty.current_zone_id,
+      end_lat: scooty.current_lat, end_lng: scooty.current_lng,
+      distance_km: simDistance, duration_minutes: simDuration, fare_amount,
+    });
+    await billingService.chargeRide({ user_id, ride_id, amount: fare_amount });
+
+    res.status(201).json({
+      message: 'Simulated ride completed and billed',
+      ride_id, distance_km: simDistance, duration_minutes: simDuration, fare_amount,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { unlockScooty, uploadPhoto, uploadConditionPhoto, endRide, activeRide, history, calculateFare, simulateRide };
