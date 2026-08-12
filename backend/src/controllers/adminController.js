@@ -1,12 +1,10 @@
 const Scooty = require('../models/Scooty');
-const MaintenanceLog = require('../models/MaintenanceLog');
 const ParkingZone = require('../models/ParkingZone');
 const User = require('../models/User');
 const IotUnit = require('../models/IotUnit');
 const PricingPlan = require('../models/PricingPlan');
 const Subscription = require('../models/Subscription');
 const Transaction = require('../models/Transaction');
-const ConditionPhoto = require('../models/ConditionPhoto');
 const Ride = require('../models/Ride');
 const VirtualCard = require('../models/VirtualCard');
 const billingService = require('../services/billingService');
@@ -16,7 +14,6 @@ const billingService = require('../services/billingService');
 async function dashboard(req, res, next) {
   try {
     const scooties = await Scooty.findAll();
-    const logs = await MaintenanceLog.findOpen();
     const zones = await ParkingZone.findAll();
     const pendingUsers = await User.findByStatus('pending');
     const transactions = await Transaction.findAll();
@@ -33,7 +30,6 @@ async function dashboard(req, res, next) {
 
     res.json({
       scooty_counts: scootyCounts,
-      open_maintenance_logs: logs.length,
       zone_count: zones.length,
       pending_users: pendingUsers.length,
       total_transactions: transactions.length,
@@ -93,6 +89,15 @@ async function updateScootyStatus(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function rechargeScooty(req, res, next) {
+  try {
+    const scooty = await Scooty.findById(req.params.id);
+    if (!scooty) return res.status(404).json({ error: 'Scooty not found' });
+    await Scooty.updateBattery(req.params.id, 100);
+    res.json({ message: 'Scooty recharged successfully', scooty_id: Number(req.params.id), battery_level: 100 });
+  } catch (err) { next(err); }
+}
+
 async function deleteScooty(req, res, next) {
   try {
     const scooty = await Scooty.findById(req.params.id);
@@ -100,21 +105,6 @@ async function deleteScooty(req, res, next) {
     if (scooty.status === 'in_use') return res.status(400).json({ error: 'Cannot delete a scooty that is currently on a ride' });
     await Scooty.delete(req.params.id);
     res.json({ message: 'Scooty deleted' });
-  } catch (err) { next(err); }
-}
-
-// ---------------- Maintenance Logs ----------------
-
-async function listMaintenanceLogs(req, res, next) {
-  try { res.json(await MaintenanceLog.findAll()); } catch (err) { next(err); }
-}
-
-async function deleteMaintenanceLog(req, res, next) {
-  try {
-    const log = await MaintenanceLog.findById(req.params.id);
-    if (!log) return res.status(404).json({ error: 'Maintenance log not found' });
-    await MaintenanceLog.delete(req.params.id);
-    res.json({ message: 'Maintenance log deleted' });
   } catch (err) { next(err); }
 }
 
@@ -372,18 +362,6 @@ async function simulateRide(req, res, next) {
   } catch (err) { next(err); }
 }
 
-// ---------------- Condition Photos (admin view + delete) ----------------
-
-async function listConditionPhotos(req, res, next) {
-  try { res.json(await ConditionPhoto.findAll()); } catch (err) { next(err); }
-}
-
-async function deleteConditionPhoto(req, res, next) {
-  try {
-    await ConditionPhoto.delete(req.params.id);
-    res.json({ message: 'Condition photo deleted' });
-  } catch (err) { next(err); }
-}
 
 // ---------------- Virtual Cards (admin view + block/unblock) ----------------
 
@@ -403,8 +381,7 @@ async function updateCardStatus(req, res, next) {
 
 module.exports = {
   dashboard,
-  listScooties, createScooty, updateScooty, updateScootyStatus, deleteScooty,
-  listMaintenanceLogs, deleteMaintenanceLog,
+  listScooties, createScooty, updateScooty, updateScootyStatus, rechargeScooty, deleteScooty,
   listZones, createZone, updateZone, deleteZone,
   listAllUsers, listPendingUsers, approveUser, suspendUser, updateUserRole, updateUser, deleteUser,
   listPlans, createPlan, updatePlan, deletePlan,
@@ -412,6 +389,5 @@ module.exports = {
   listTransactions, createManualTransaction,
   listIotUnits, simulateIotPing, deleteIotUnit,
   listRides, simulateRide,
-  listConditionPhotos, deleteConditionPhoto,
   listVirtualCards, updateCardStatus,
 };

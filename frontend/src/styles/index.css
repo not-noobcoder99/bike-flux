@@ -1488,3 +1488,22 @@ td input {
   background: rgba(34, 197, 94, 0.25);
   border-color: rgba(34, 197, 94, 0.5);
 }
+
+/* ======================================================
+   ZONE TOOLTIPS (map parking areas)
+   ====================================================== */
+.zone-tooltip {
+  background: rgba(17, 24, 39, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  color: #c4b5fd !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+.zone-tooltip::before {
+  border-top-color: rgba(17, 24, 39, 0.9) !important;
+}

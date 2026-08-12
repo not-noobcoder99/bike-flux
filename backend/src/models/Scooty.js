@@ -63,6 +63,10 @@ const Scooty = {
     await db.query('UPDATE scooties SET status = ? WHERE scooty_id = ?', [status, scooty_id]);
   },
 
+  async updateBattery(scooty_id, battery_level) {
+    await db.query('UPDATE scooties SET battery_level = ? WHERE scooty_id = ?', [battery_level, scooty_id]);
+  },
+
   async updateLocation(scooty_id, lat, lng) {
     await db.query('UPDATE scooties SET current_lat = ?, current_lng = ? WHERE scooty_id = ?', [lat, lng, scooty_id]);
   },

@@ -12,11 +12,8 @@ router.get('/scooties', c.listScooties);
 router.post('/scooties', c.createScooty);
 router.put('/scooties/:id', c.updateScooty);
 router.patch('/scooties/:id/status', c.updateScootyStatus);
+router.post('/scooties/:id/recharge', c.rechargeScooty);
 router.delete('/scooties/:id', c.deleteScooty);
-
-// Maintenance Logs
-router.get('/maintenance-logs', c.listMaintenanceLogs);
-router.delete('/maintenance-logs/:id', c.deleteMaintenanceLog);
 
 // Parking Zones (Stations)
 router.get('/zones', c.listZones);
@@ -55,10 +52,6 @@ router.delete('/iot-units/:id', c.deleteIotUnit);
 // Rides
 router.get('/rides', c.listRides);
 router.post('/simulate-ride', c.simulateRide);
-
-// Condition Photos
-router.get('/condition-photos', c.listConditionPhotos);
-router.delete('/condition-photos/:id', c.deleteConditionPhoto);
 
 // Virtual Cards
 router.get('/virtual-cards', c.listVirtualCards);

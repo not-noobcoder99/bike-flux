@@ -1,6 +1,5 @@
 const Ride = require('../models/Ride');
 const Scooty = require('../models/Scooty');
-const ConditionPhoto = require('../models/ConditionPhoto');
 const PricingPlan = require('../models/PricingPlan');
 const iotService = require('../services/iotService');
 const billingService = require('../services/billingService');
@@ -29,45 +28,16 @@ async function unlockScooty(req, res, next) {
       user_id, scooty_id, plan_id: plan.plan_id, start_zone_id: resolved_zone_id, start_lat: lat, start_lng: lng,
     });
 
+    await Ride.activate(ride_id);
     await iotService.unlockScooty(scooty_id);
     await Scooty.updateStatus(scooty_id, 'in_use');
 
-    res.status(201).json({ ride_id, message: 'Scooty unlocked. Please confirm condition photo to start riding.' });
+    res.status(201).json({ ride_id, message: 'Scooty unlocked and ride started.' });
   } catch (err) {
     next(err);
   }
 }
 
-async function uploadPhoto(req, res, next) {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'No photo file uploaded' });
-    const photo_url = `/uploads/${req.file.filename}`;
-    res.status(201).json({ photo_url });
-  } catch (err) {
-    next(err);
-  }
-}
-
-async function uploadConditionPhoto(req, res, next) {
-  try {
-    const { ride_id, photo_url, photo_type } = req.body;
-    if (!ride_id || !photo_url) {
-      return res.status(400).json({ error: 'ride_id and photo_url are required' });
-    }
-    const ride = await Ride.findById(ride_id);
-    if (!ride) return res.status(404).json({ error: 'Ride not found' });
-
-    await ConditionPhoto.create({ ride_id, photo_url, photo_type: photo_type || 'start' });
-
-    if (photo_type === 'start' || !photo_type) {
-      await Ride.activate(ride_id);
-    }
-
-    res.json({ message: 'Condition photo recorded' });
-  } catch (err) {
-    next(err);
-  }
-}
 
 async function endRide(req, res, next) {
   try {
@@ -92,6 +62,9 @@ async function endRide(req, res, next) {
     await billingService.chargeRide({ user_id: ride.user_id, ride_id, amount: fare_amount });
 
     await iotService.lockScooty(ride.scooty_id);
+    const scooty = await Scooty.findById(ride.scooty_id);
+    const newBattery = Math.max(0, (scooty.battery_level || 100) - Math.max(1, Math.round(distance_km * 2)));
+    await Scooty.updateBattery(ride.scooty_id, newBattery);
     await Scooty.updateStatus(ride.scooty_id, 'available');
     await Scooty.updateLocation(ride.scooty_id, end_lat, end_lng);
 
@@ -171,6 +144,9 @@ async function simulateRide(req, res, next) {
     });
     await billingService.chargeRide({ user_id, ride_id, amount: fare_amount });
 
+    const newBattery = Math.max(0, (scooty.battery_level || 100) - Math.max(1, Math.round(simDistance * 2)));
+    await Scooty.updateBattery(scooty.scooty_id, newBattery);
+
     res.status(201).json({
       message: 'Simulated ride completed and billed',
       ride_id, distance_km: simDistance, duration_minutes: simDuration, fare_amount,
@@ -180,4 +156,4 @@ async function simulateRide(req, res, next) {
   }
 }
 
-module.exports = { unlockScooty, uploadPhoto, uploadConditionPhoto, endRide, activeRide, history, calculateFare, simulateRide };
+module.exports = { unlockScooty, endRide, activeRide, history, calculateFare, simulateRide };

@@ -33,15 +33,19 @@ export default function Navbar() {
             <Link to="/" style={linkStyle('/')}>
               <Map size={18} /> Map
             </Link>
-            <Link to="/history" style={linkStyle('/history')}>
-              <History size={18} /> History
-            </Link>
-            <Link to="/wallet" style={linkStyle('/wallet')}>
-              <Wallet size={18} /> Wallet
-            </Link>
-            <Link to="/simulate" style={linkStyle('/simulate')}>
-              <Play size={18} /> Simulate
-            </Link>
+            {user.role !== 'admin' && (
+              <>
+                <Link to="/history" style={linkStyle('/history')}>
+                  <History size={18} /> History
+                </Link>
+                <Link to="/wallet" style={linkStyle('/wallet')}>
+                  <Wallet size={18} /> Wallet
+                </Link>
+                <Link to="/simulate" style={linkStyle('/simulate')}>
+                  <Play size={18} /> Simulate
+                </Link>
+              </>
+            )}
             <Link to="/profile" style={linkStyle('/profile')}>
               <User size={18} /> Profile
             </Link>
